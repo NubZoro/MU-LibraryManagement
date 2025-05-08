@@ -29,8 +29,6 @@ https://youtu.be/4aztZd3oges
   - **Firebase Auth**: For user authentication.
   - **Firebase Firestore**: For the database.
   - **Firebase Storage**: For storing images (if applicable).
-- **Provider**: For state management.
-- **QR Code Scanner**: For scanning QR codes.
 
 ## Installation
 
@@ -49,7 +47,6 @@ https://youtu.be/4aztZd3oges
    - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/).
    - Add your Android and iOS apps to the Firebase project.
    - Download the `google-services.json` file for Android and place it in `android/app/`.
-   - Download the `GoogleService-Info.plist` file for iOS and place it in `ios/Runner/`.
 
 4. **Run the app**:
    ```bash
@@ -83,7 +80,3 @@ The release APK will be located at `build/app/outputs/flutter-apk/app-release.ap
 3. Commit your changes.
 4. Push to the branch.
 5. Create a Pull Request.
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
