@@ -2,6 +2,10 @@
 
 A Flutter-based library management app that allows users to manage books, borrowing, and reading lists.
 
+# Video Demo Link (Showcasing Functionality and Features)
+
+https://youtu.be/4aztZd3oges
+
 ## Features
 
 - **User Authentication**: Sign up, login, and manage user profiles.
