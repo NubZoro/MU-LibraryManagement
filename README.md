@@ -6,6 +6,12 @@ A Flutter-based library management app that allows users to manage books, borrow
 
 https://youtu.be/4aztZd3oges
 
+## 📄 Project Documentation
+
+- 👉 [Click here to view the Software Requirements Specification (SRS)](./SRS.pdf)
+- 👉 [Click here to view the Software Design Document (SDD)](./SDD.pdf)
+
+
 ## Features
 
 - **User Authentication**: Sign up, login, and manage user profiles.
