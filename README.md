@@ -8,8 +8,8 @@ https://youtu.be/4aztZd3oges
 
 ## 📄 Project Documentation
 
-- 👉 [Click here to view the Software Requirements Specification (SRS)](./SRS.pdf)
-- 👉 [Click here to view the Software Design Document (SDD)](./SDD.pdf)
+- 👉 [Software Requirements Specification (SRS)](./SRS.final.pdf)
+- 👉 [Software Design Document (SDD)](./Project_SDD_Team-1.pdf)
 
 
 ## Features
