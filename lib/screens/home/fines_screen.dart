@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:libmu/services/fines_service.dart';
 import 'package:libmu/widgets/animated_gradient_background.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:libmu/models/book.dart';
 
 class FinesScreen extends StatefulWidget {
   const FinesScreen({Key? key}) : super(key: key);
@@ -85,13 +87,22 @@ class _FinesScreenState extends State<FinesScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                                if (_overdueBooks.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${_overdueBooks.length} book${_overdueBooks.length > 1 ? 's' : ''} overdue',
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.error,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                                 const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: _totalFines > 0
-                                      ? () => _showPaymentDialog(context)
-                                      : null,
-                                  child: const Text('Pay Fines'),
-                                ),
+                                if (_totalFines > 0)
+                                  ElevatedButton(
+                                    onPressed: () => _showPaymentDialog(context),
+                                    child: const Text('Pay Fines'),
+                                  ),
                               ],
                             ),
                           ),
@@ -117,10 +128,10 @@ class _FinesScreenState extends State<FinesScreen> {
                             itemCount: _overdueBooks.length,
                             itemBuilder: (context, index) {
                               final bookData = _overdueBooks[index];
-                              final book = bookData['book'];
-                              final dueDate = bookData['dueDate'];
-                              final daysOverdue = bookData['daysOverdue'];
-                              final fineAmount = bookData['fineAmount'];
+                              final book = bookData['book'] as Book;
+                              final dueDate = bookData['dueDate'] as DateTime;
+                              final daysOverdue = bookData['daysOverdue'] as int;
+                              final fineAmount = bookData['fineAmount'] as double;
 
                               return Card(
                                 margin: const EdgeInsets.only(bottom: 8.0),
@@ -129,16 +140,26 @@ class _FinesScreenState extends State<FinesScreen> {
                                   subtitle: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
+                                      Text('Author: ${book.author}'),
                                       Text('Due Date: ${DateFormat('MMM dd, yyyy').format(dueDate)}'),
-                                      Text('Days Overdue: $daysOverdue'),
                                       Text(
-                                        'Fine: ₹$fineAmount',
+                                        'Overdue by $daysOverdue days',
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.error,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Fine: ₹${fineAmount.toStringAsFixed(2)}',
                                         style: TextStyle(
                                           color: Theme.of(context).colorScheme.error,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ],
+                                  ),
+                                  trailing: Icon(
+                                    Icons.warning,
+                                    color: Theme.of(context).colorScheme.error,
                                   ),
                                 ),
                               );

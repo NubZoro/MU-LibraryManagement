@@ -226,6 +226,121 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
     );
   }
 
+  Widget _buildTotalFines(String userId) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('books')
+          .where('borrowedBy', isEqualTo: userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        }
+
+        final books = snapshot.data!.docs;
+        double totalFines = 0.0;
+        int overdueBooks = 0;
+
+        for (var doc in books) {
+          final data = doc.data() as Map<String, dynamic>;
+          final dueDateRaw = data['dueDate'];
+          final borrowedAtRaw = data['borrowedAt'];
+          
+          DateTime? dueDate;
+          DateTime? borrowedAt;
+          
+          // Parse borrowedAt
+          if (borrowedAtRaw != null) {
+            try {
+              if (borrowedAtRaw is int) {
+                borrowedAt = DateTime.fromMillisecondsSinceEpoch(borrowedAtRaw);
+              } else if (borrowedAtRaw is Timestamp) {
+                borrowedAt = borrowedAtRaw.toDate();
+              } else if (borrowedAtRaw is String) {
+                borrowedAt = DateTime.parse(borrowedAtRaw);
+              }
+            } catch (e) {
+              print('Error parsing borrowedAt in total fines: $e');
+            }
+          }
+
+          // Parse dueDate
+          if (dueDateRaw != null) {
+            try {
+              if (dueDateRaw is int) {
+                dueDate = DateTime.fromMillisecondsSinceEpoch(dueDateRaw);
+              } else if (dueDateRaw is Timestamp) {
+                dueDate = dueDateRaw.toDate();
+              } else if (dueDateRaw is String) {
+                dueDate = DateTime.parse(dueDateRaw);
+              }
+            } catch (e) {
+              print('Error parsing dueDate in total fines: $e');
+            }
+          }
+
+          // If dates are missing, try to get them from the Book model
+          if (borrowedAt == null || dueDate == null) {
+            final book = Book.fromFirestore(doc);
+            borrowedAt ??= book.borrowedAt;
+            dueDate ??= book.getDueDate();
+          }
+
+          if (dueDate != null) {
+            final now = DateTime.now();
+            if (dueDate.isBefore(now)) {
+              final daysOverdue = now.difference(dueDate).inDays;
+              // Calculate fine: ₹50 per day overdue
+              final fine = daysOverdue * 50.0;
+              totalFines += fine;
+              overdueBooks++;
+            }
+          }
+        }
+
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total Fines: ₹${totalFines.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: totalFines > 0 ? Colors.red : Colors.green,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                if (overdueBooks > 0)
+                  Text(
+                    '$overdueBooks book${overdueBooks > 1 ? 's' : ''} overdue',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 14,
+                    ),
+                  ),
+                if (totalFines > 0)
+                  const Text(
+                    'Fine rate: ₹50 per day per book',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildBorrowedBooksList(String userId) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -241,67 +356,65 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
           return const CircularProgressIndicator();
         }
 
-        final books = snapshot.data!.docs
-            .map((doc) => Book.fromFirestore(doc))
-            .toList();
+        final books = snapshot.data!.docs;
 
         if (books.isEmpty) {
           return const Text('No books borrowed');
         }
 
         return Column(
-          children: books.map((book) {
-            final data = snapshot.data!.docs
-                .firstWhere((doc) => doc.id == book.id)
-                .data() as Map<String, dynamic>;
+          children: books.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final book = Book.fromFirestore(doc);
             
+            // Get loan information
             final borrowedAtRaw = data['borrowedAt'];
             final dueDateRaw = data['dueDate'];
             DateTime? borrowedAt;
             DateTime? dueDateTime;
+            
+            // Parse borrowedAt
             if (borrowedAtRaw != null) {
-              if (borrowedAtRaw is int) {
-                borrowedAt = DateTime.fromMillisecondsSinceEpoch(borrowedAtRaw);
-              } else if (borrowedAtRaw is Timestamp) {
-                borrowedAt = borrowedAtRaw.toDate();
+              try {
+                if (borrowedAtRaw is int) {
+                  borrowedAt = DateTime.fromMillisecondsSinceEpoch(borrowedAtRaw);
+                } else if (borrowedAtRaw is Timestamp) {
+                  borrowedAt = borrowedAtRaw.toDate();
+                } else if (borrowedAtRaw is String) {
+                  borrowedAt = DateTime.parse(borrowedAtRaw);
+                }
+              } catch (e) {
+                print('Error parsing borrowedAt: $e');
               }
             }
+
+            // Parse dueDate
             if (dueDateRaw != null) {
-              if (dueDateRaw is int) {
-                dueDateTime = DateTime.fromMillisecondsSinceEpoch(dueDateRaw);
-              } else if (dueDateRaw is Timestamp) {
-                dueDateTime = dueDateRaw.toDate();
+              try {
+                if (dueDateRaw is int) {
+                  dueDateTime = DateTime.fromMillisecondsSinceEpoch(dueDateRaw);
+                } else if (dueDateRaw is Timestamp) {
+                  dueDateTime = dueDateRaw.toDate();
+                } else if (dueDateRaw is String) {
+                  dueDateTime = DateTime.parse(dueDateRaw);
+                }
+              } catch (e) {
+                print('Error parsing dueDate: $e');
               }
             }
-            final now = DateTime.now();
 
-            if (borrowedAt == null || dueDateTime == null) {
-              return ListTile(
-                title: Text(book.title),
-                subtitle: Text('Author: ${book.author}'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.error_outline, color: Colors.red),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Invalid Loan Data'),
-                        content: const Text('This book has missing loan information. Please contact support.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              );
+            // If we couldn't parse the dates, use the book's built-in methods
+            if (borrowedAt == null) {
+              borrowedAt = book.borrowedAt;
+            }
+            if (dueDateTime == null) {
+              dueDateTime = book.getDueDate();
             }
 
-            final remainingDays = dueDateTime.difference(now).inDays;
+            final now = DateTime.now();
+            final remainingDays = dueDateTime?.difference(now).inDays ?? 0;
             final isOverdue = remainingDays < 0;
+            final fine = isOverdue ? -remainingDays * 50.0 : 0.0; // ₹50 per day overdue
 
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 4.0),
@@ -311,8 +424,10 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Author: ${book.author}'),
-                    Text('Borrowed: ${borrowedAt.toString().split(' ')[0]}'),
-                    Text('Due Date: ${dueDateTime.toString().split(' ')[0]}'),
+                    if (borrowedAt != null)
+                      Text('Borrowed: ${borrowedAt.toString().split(' ')[0]}'),
+                    if (dueDateTime != null)
+                      Text('Due Date: ${dueDateTime.toString().split(' ')[0]}'),
                     Text(
                       isOverdue
                           ? 'Overdue by ${-remainingDays} days'
@@ -324,6 +439,14 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    if (isOverdue)
+                      Text(
+                        'Fine: ₹${fine.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                   ],
                 ),
                 trailing: Icon(
@@ -882,6 +1005,12 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                               _buildBorrowedBooksList(user.id),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'Total Fines:',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              _buildTotalFines(user.id),
                             ],
                           ),
                         ),

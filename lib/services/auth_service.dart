@@ -110,22 +110,22 @@ class AuthService with ChangeNotifier {
         });
       } else {
         // Create student document in Firestore with initial gamification data
-        await _firestore.collection('users').doc(userCredential.user!.uid).set({
-          'uid': userCredential.user!.uid,
-          'email': email,
-          'name': name,
-          'studentId': studentId,
-          'department': department,
-          'isAdmin': false,
-          'borrowedBooks': [],
-          'points': 0,
-          'level': 1,
-          'badges': [],
-          'consecutiveReturns': 0,
-          'genreStats': {},
-          'lastBookReturn': null,
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'uid': userCredential.user!.uid,
+        'email': email,
+        'name': name,
+        'studentId': studentId,
+        'department': department,
+        'isAdmin': false,
+        'borrowedBooks': [],
+        'points': 0,
+        'level': 1,
+        'badges': [],
+        'consecutiveReturns': 0,
+        'genreStats': {},
+        'lastBookReturn': null,
           'accountType': 'student',
-        });
+      });
       }
 
       return userCredential;
