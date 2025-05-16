@@ -8,6 +8,7 @@ https://youtu.be/4aztZd3oges
 
 ## 📄 Project Documentation
 
+- 👉 [Statement Of Work (SOW)](./SOW_LMS.pdf)
 - 👉 [Software Requirements Specification (SRS)](./SRS.final.pdf)
 - 👉 [Software Design Document (SDD)](./Project_SDD_Team-1.pdf)
 
