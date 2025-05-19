@@ -11,7 +11,7 @@ https://youtu.be/4aztZd3oges
 - 👉 [Statement Of Work (SOW)](./SOW_LMS.pdf)
 - 👉 [Software Requirements Specification (SRS)](./SRS.final.pdf)
 - 👉 [Software Design Document (SDD)](./Project_SDD_Team-1.pdf)
-- 👉 [Test Plan](./Test docx_ LMS.xlsx)
+- 👉 [Test Plan](./TestPlanLMS.xlsx)
 
 
 ## Features
